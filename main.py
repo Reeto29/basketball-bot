@@ -2,13 +2,13 @@ import os
 import discord
 import requests
 import time
+import unidecode
 
 
 #brings in the hidden token
 Discord_Token = os.environ['TOKEN']
 
 client = discord.Client()
-
 
 #When bot is ready, it will say it is logged in
 @client.event
@@ -18,10 +18,14 @@ async def on_ready():
 #Event triggers each time a message is received
 @client.event
 async def on_message(message):
-  #If the creator of the message is the bot it will not 'scan' it
 
+  #removes accents since API does not accept them
+  message.content=unidecode.unidecode(message.content)
+
+  #bulletproofing input
   text=message.content.upper()
 
+  #If the creator of the message is the bot it will not 'scan' it
   if message.author == client.user:
     return
 
@@ -34,6 +38,7 @@ async def on_message(message):
   if text == ('=HELLO'):
     await message.channel.send('Hello')
 
+  #If the user uses the player command with the '=' prefix
   if message.content.startswith('=player'):
     full_name = message.content
     full_name=full_name.split(" ")
@@ -77,21 +82,17 @@ async def on_message(message):
       player_stats.append(stat_block[19][17:]) #Steals
       player_stats.append(stat_block[20][17:]) #Blocks
 
-      await message.channel.send(f"""
-      {full_name} Career Stats:
-      {player_stats[0]} Games Played
-      {player_stats[1]} Point Avg
-      {player_stats[2]} Rebounds
-      {player_stats[3]} Assists
-      {player_stats[4]} Steals
-      {player_stats[5]} Blocks
-      """)
+      player_embed=discord.Embed(title=f"{full_name} Career Stats",description="Overview on player statistics", color=0xA4D6D1)
 
+      player_embed.add_field(name="Games Played",value=f"{player_stats[0]}",inline=False)
+      player_embed.add_field(name="Point Avg",value=f"{player_stats[1]}",inline=False)
+      player_embed.add_field(name="Rebounds",value=f"{player_stats[2]}",inline=False)
+      player_embed.add_field(name="Assists",value=f"{player_stats[3]}",inline=False)
+      player_embed.add_field(name="Steals",value=f"{player_stats[4]}",inline=False)
+      player_embed.add_field(name="Blocks",value=f"{player_stats[5]}",inline=False)
+      player_embed.set_footer(text="Basketball Bot")
 
-#####################################################
-
-
-
+      await message.channel.send(embed=player_embed)
 
 
 
