@@ -3,10 +3,12 @@ import discord
 import requests
 import time
 import unidecode
-
+from keep_alive import keep_alive
 
 #brings in the hidden token
 Discord_Token = os.environ['TOKEN']
+Rapid_API_Key = os.environ['rapidapi_key']
+
 
 client = discord.Client()
 
@@ -30,9 +32,15 @@ async def on_message(message):
     return
 
   #If the user says commands with the '=' prefix 
-  if text == ('=COMMAND'):
-    await message.channel.send("""Command List:
-    1. =Hello""")
+  if text == ('=HELP'):
+
+    help_embed=discord.Embed(title="Command List",description="List of Commands for Basketball Bot", color=0xCF352)
+
+    help_embed.add_field(name="=hello",value="Greet the bot",inline=False)
+    help_embed.add_field(name="=player",value="Retreive player statistics from the bot by using the '=player'followed by the full name of the player with proper capitalization. ex: =player DeMarM DeRozan",inline=False)
+
+    await message.channel.send(embed=help_embed)
+
 
   #If the user says hello with the '=' prefix 
   if text == ('=HELLO'):
@@ -46,18 +54,23 @@ async def on_message(message):
     print (full_name)
 
     url = "https://nba-stats4.p.rapidapi.com/players/"
-    querystring = {"full_name":{full_name}}
+
+    querystring = {"full_name":full_name}
+
     headers = {
-        'x-rapidapi-key': "9cd1a916bcmsh0240719c8d1daa2p120815jsn87d2095a1245",
+        'x-rapidapi-key': str(Rapid_API_Key),
         'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
         }
+
     response = requests.request("GET", url, headers=headers, params=querystring)
+
     #print(response.text)
+
     #takes player id from response text
     player_id=(str((response.text.split(",")[0]))[8:])
     #print(player_id)
     #################################
-    time.sleep(2)
+    time.sleep(1)
     ################################
 
     if player_id == "":
@@ -65,13 +78,17 @@ async def on_message(message):
 
     else:
       url = f"https://nba-stats4.p.rapidapi.com/per_game_career_regular_season/{player_id}"
+
       headers = {
-          'x-rapidapi-key': "9cd1a916bcmsh0240719c8d1daa2p120815jsn87d2095a1245",
+          'x-rapidapi-key': str(Rapid_API_Key),
           'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
           }
+
       response = requests.request("GET", url, headers=headers)
+
+
       stat_block=(response.text.split(","))
-      print(stat_block)
+      #print(stat_block)
 
       player_stats=[]
 
@@ -84,8 +101,9 @@ async def on_message(message):
 
       player_embed=discord.Embed(title=f"{full_name} Career Stats",description="Overview on player statistics", color=0xA4D6D1)
 
+
       player_embed.add_field(name="Games Played",value=f"{player_stats[0]}",inline=False)
-      player_embed.add_field(name="Point Avg",value=f"{player_stats[1]}",inline=False)
+      player_embed.add_field(name="Average Points",value=f"{player_stats[1]}",inline=False)
       player_embed.add_field(name="Rebounds",value=f"{player_stats[2]}",inline=False)
       player_embed.add_field(name="Assists",value=f"{player_stats[3]}",inline=False)
       player_embed.add_field(name="Steals",value=f"{player_stats[4]}",inline=False)
@@ -95,10 +113,7 @@ async def on_message(message):
       await message.channel.send(embed=player_embed)
 
 
-
-
+#pings website server
+keep_alive()
 #Runs Discord Bot
 client.run(Discord_Token)
-
- 
-
