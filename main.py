@@ -71,13 +71,17 @@ async def on_message(message):
 
     help_embed.add_field(name="=hello",value="Greet the bot",inline=False)
     help_embed.add_field(name="=player",value="Retreive player statistics from the bot by using the '=player'followed by the full name of the player with proper capitalization. ex: =player DeMar DeRozan",inline=False)
+    help_embed.add_field(name="=andrej",value="Talk to Andrej!",inline=False)
 
     await message.channel.send(embed=help_embed)
 
 
   #If the user says hello with the '=' prefix 
   if text == ('=HELLO'):
-    await message.channel.send('Hello')
+    await message.channel.send('Heyyyyyy')
+
+  if text == ('=ANDREJ'):
+    await message.channel.send('Helló, Andrej magyarországi beszédet mond. Nagyon szükségem van Sharballsra.')
 
   #If the user uses the player command with the '=' prefix
   if message.content.startswith('=player'):
