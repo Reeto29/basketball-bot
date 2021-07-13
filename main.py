@@ -1,9 +1,12 @@
 import os
 import discord
-import requests
 import time
 import unidecode
 from keep_alive import keep_alive
+
+#for scraping
+import requests
+from bs4 import BeautifulSoup
 
 #brings in the hidden token
 Discord_Token = os.environ['TOKEN']
@@ -11,6 +14,36 @@ Rapid_API_Key = os.environ['rapidapi_key']
 
 
 client = discord.Client()
+
+def scrape_image(player_id):
+  link_to_player = f'https://www.nba.com/player/{player_id}'
+  header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
+
+  response = requests.get(link_to_player, headers=header)
+  if response.status_code != 200: print("Failed to get HTML:", response.status_code, response.reason); exit()
+
+  soup = BeautifulSoup(response.text, "html5lib")
+
+  
+#__next > div.Layout_withNav__2ED2- > div.flex.flex-col.bg-teams-LAL > section.relative.overflow-hidden > div.relative.block.bg-transparent.max-w-screen-xxl.mx-auto > div > div.block.w-1\/2.md\:w-1\/3 > img
+  try:
+    image_address = soup.select(r'div > div.block.w-1\/2.md\:w-1\/3 > img')[0]['src']
+  except: 
+    current_player = False
+
+#body > main > div > div > div > div:nth-child(2) > div.stats-player-summary.team-color.TOR > div.stats-teamplayer-summary-container.with-padding > div.stats-player-summary__container > div > div.summary-player__logo > img
+  #try:
+    # image_address = soup.find_all('img')
+    # print(image_address)
+
+  # except: 
+  #   current_player = True
+  
+  #print("current") if current_player else print("historic")
+
+
+
+  return str(image_address)
 
 #When bot is ready, it will say it is logged in
 @client.event
@@ -54,7 +87,7 @@ async def on_message(message):
     print (full_name)
 
     url = "https://nba-stats4.p.rapidapi.com/players/"
-
+    
     querystring = {"full_name":full_name}
 
     headers = {
@@ -68,7 +101,6 @@ async def on_message(message):
 
     #takes player id from response text
     player_id=(str((response.text.split(",")[0]))[8:])
-    print(player_id)
     #################################
     time.sleep(1)
     ################################
@@ -77,20 +109,25 @@ async def on_message(message):
       await message.channel.send(f"There is not enough information available on {full_name}")
 
     else:
+      
+      
       url = f"https://nba-stats4.p.rapidapi.com/per_game_career_regular_season/{player_id}"
 
       headers = {
-          'x-rapidapi-key': str(Rapid_API_Key),
-          'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
-          }
+        'x-rapidapi-key': str(Rapid_API_Key),
+        'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
+      }
 
       response = requests.request("GET", url, headers=headers)
 
 
-      stat_block=(response.text.split(","))
-      #print(stat_block)
+      stat_block=(response.text.split(","))    
 
       player_stats=[]
+
+      player_embed=discord.Embed(title=f"{full_name} Career Stats",description="Overview on player statistics", color=0xA4D6D1)
+
+      player_embed.set_thumbnail(url=scrape_image(player_id))
 
       player_stats.append(stat_block[3][7:])  #Games Played
       player_stats.append(stat_block[22][17:-2]) #Point Avg
@@ -99,9 +136,6 @@ async def on_message(message):
       player_stats.append(stat_block[19][17:]) #Steals
       player_stats.append(stat_block[20][17:]) #Blocks
 
-      player_embed=discord.Embed(title=f"{full_name} Career Stats",description="Overview on player statistics", color=0xA4D6D1)
-
-      player_embed.set_thumbnail(url=f"https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png")
 
       player_embed.add_field(name="Games Played",value=f"{player_stats[0]}",inline=False)
       player_embed.add_field(name="Average Points",value=f"{player_stats[1]}",inline=False)
