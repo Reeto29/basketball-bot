@@ -37,7 +37,7 @@ async def on_message(message):
     help_embed=discord.Embed(title="Command List",description="List of Commands for Basketball Bot", color=0xCF352)
 
     help_embed.add_field(name="=hello",value="Greet the bot",inline=False)
-    help_embed.add_field(name="=player",value="Retreive player statistics from the bot by using the '=player'followed by the full name of the player with proper capitalization. ex: =player DeMarM DeRozan",inline=False)
+    help_embed.add_field(name="=player",value="Retreive player statistics from the bot by using the '=player'followed by the full name of the player with proper capitalization. ex: =player DeMar DeRozan",inline=False)
 
     await message.channel.send(embed=help_embed)
 
@@ -68,7 +68,7 @@ async def on_message(message):
 
     #takes player id from response text
     player_id=(str((response.text.split(",")[0]))[8:])
-    #print(player_id)
+    print(player_id)
     #################################
     time.sleep(1)
     ################################
@@ -101,6 +101,7 @@ async def on_message(message):
 
       player_embed=discord.Embed(title=f"{full_name} Career Stats",description="Overview on player statistics", color=0xA4D6D1)
 
+      player_embed.set_thumbnail(url=f"https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png")
 
       player_embed.add_field(name="Games Played",value=f"{player_stats[0]}",inline=False)
       player_embed.add_field(name="Average Points",value=f"{player_stats[1]}",inline=False)
@@ -113,7 +114,8 @@ async def on_message(message):
       await message.channel.send(embed=player_embed)
 
 
-#pings website server
+#pings website server over and over through the method ran in keep_alive.py with Flask
 keep_alive()
+
 #Runs Discord Bot
 client.run(Discord_Token)
