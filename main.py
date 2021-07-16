@@ -66,6 +66,9 @@ async def on_ready():
 #Event triggers each time a message is received
 @client.event
 async def on_message(message):
+	@client.event
+	async def on_member_update(before, after):
+		if str(before.status) == "online" and str(after.status) == "offline": await message.channel.send(f'Goodbye, {after.user}')
 
 	#removes accents since API does not accept them
 	message.content=unidecode.unidecode(message.content)
@@ -86,19 +89,13 @@ async def on_message(message):
 
 		help_embed.add_field(name="=player",value="Retreive player statistics from the bot by using the '=player' followed by the full name of the player with proper capitalization. ex: =player DeMar DeRozan",inline=False)
 
-		help_embed.add_field(name="=andrej",value="Talk to Andrej!",inline=False)
-
 		help_embed.add_field(name="=gn or =good night followed by anything else such as gn!",value="Have Andrej say goodbye",inline=False)
 
 		await message.channel.send(embed=help_embed)
 
-
 	#If the user says hello with the '=' prefix 
 	if text == '=HELLO':
 		await message.channel.send('Heyyyyyy')
-
-	if text == '=ANDREJ':
-		await message.channel.send('Helló, Andrej magyarországi beszédet mond. Nagyon szükségem van Sharballsra.')
 	
 	if text.startswith('=GOOD NIGHT') or text.startswith('=GN'):
 		await message.channel.send('one time crodie') 
