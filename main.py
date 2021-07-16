@@ -7,7 +7,6 @@ from keep_alive import keep_alive
 #for scraping
 import requests
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
 
 
 #brings in the hidden token
@@ -28,17 +27,12 @@ def scrape_image(player_id):
 
 		current_soup = BeautifulSoup(response.text, "html5lib")
 
-		print("mikey?")
-
 		img_addy = current_soup.select(r'div > div.block.w-1\/2.md\:w-1\/3 > img')[0]['src']
 
 		image_address = img_addy
 
-		print("mikey.")
-
 		current_player = True
 	except: 
-		print("MIKEY")
 		current_player = False
 
 	if current_player == False:
@@ -47,24 +41,15 @@ def scrape_image(player_id):
 			player_link = f'https://www.nba.com/stats/player/{player_id}/career'
 			header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
 
-			print("mikey!")
-
 			response = requests.get(player_link, headers=header)
 
-			print("michael")
 			if response.status_code != 200: print("Failed to get HTML:", response.status_code, response.reason); exit()
-
-			print("MICHAEL")
 			
 			historic_soup = BeautifulSoup(response.text, "html5lib")
 
-			print("...mikey")
-
-			mikehul = historic_soup.select(r'div.stats-player-summary__container > div > div.summary-player__logo > img')
+			history_man = historic_soup.select(r'div.stats-player-summary__container > div > div.summary-player__logo > img')
 			
-
-			print("michael b jordan")
-			print(mikehul, "printed")
+			print(history_man, "printed")
 			current_player = False
 		except: 
 		 	current_player = True
@@ -118,6 +103,22 @@ async def on_message(message):
 	if text.startswith('=GOOD NIGHT') or text.startswith('=GN'):
 		await message.channel.send('one time crodie') 
 
+	#find info on custom players
+	if message.content.startswith('=customplayer'):
+		#all just to have the custom player name
+		split_custom_player_name = message.content.split()[1:]
+		custom_player_name, j = '', 0
+		for i in split_custom_player_name:
+			custom_player_name += str(split_custom_player_name)[j] + ' '
+		custom_player_name -= custom_player_name[-1]
+		print(custom_player_name)
+	
+
+
+	#add stats to custom players by playing custom game
+	if message.content.startswith('=playcustom'):
+		pass
+
 	#If the user uses the player command with the '=' prefix
 	if message.content.upper().startswith('=PLAYER'):
 
@@ -126,25 +127,22 @@ async def on_message(message):
 		full_name=full_name.split(" ")
 
 		if len(full_name) < 3:
-			print("Entered first/last Name")
+			querystring = {"first_name":full_name[1]}
+		
+		if len(full_name) == 3:
+			full_name=(f"{full_name[1]} {full_name[2]}")
+			querystring = {"full_name":full_name}
 			
-		first_name=full_name[1]
-
-		last_name=full_name[2]
-
-
-		full_name=(f"{first_name} {last_name}")
-
+		
 		url = "https://nba-stats4.p.rapidapi.com/players/"
-
-		querystring = {"full_name":full_name}
 
 		headers = {
 			'x-rapidapi-key': str(Rapid_API_Key),
 			'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
 			}
-
 		response = requests.request("GET", url, headers=headers, params=querystring)
+
+		print(response.text)
 
 		#takes player id from response text
 		player_id=(str((response.text.split(",")[0]))[8:])
@@ -204,10 +202,10 @@ async def on_message(message):
 				player_embed.add_field(name="Blocks",value=f"{player_stats[5]}",inline=False)
 			except:print("Block stats not working")
 
-
 			player_embed.set_footer(text="Basketball Bot")
 
 			await message.channel.send(embed=player_embed)
+
 
 
 #pings website server over and over through the method ran in keep_alive.py with Flask
