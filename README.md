@@ -1,1 +1,1 @@
-This is a Discord bot that allows users to search up the career stats, photos, and details of NBA players, as well as invent their own "custom" player to "play" games as them and accumulate/check stats. Additionally there are some extra random commands that are only text-based. 
+
