@@ -1,23 +1,25 @@
 import os
-import discord
 import time
 import unidecode
+
+#discord/server
+import discord
 from keep_alive import keep_alive
 
-#for scraping
+#scraping
 import requests
 from bs4 import BeautifulSoup
 
+#database
+from replit import db
 
 #brings in the hidden token
-Discord_Token = os.environ['TOKEN']
-Rapid_API_Key = os.environ['rapidapi_key']
-
+DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
+RAPID_API_KEY = os.environ['RAPID_API_KEY']
 
 client = discord.Client()
 
 def scrape_image(player_id):
-	#__next > div.Layout_withNav__2ED2- > div.flex.flex-col.bg-teams-LAL > section.relative.overflow-hidden > div.relative.block.bg-transparent.max-w-screen-xxl.mx-auto > div > div.block.w-1\/2.md\:w-1\/3 > img
 	try:
 		player_link = f'https://www.nba.com/player/{player_id}'
 		header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
@@ -36,7 +38,6 @@ def scrape_image(player_id):
 		current_player = False
 
 	if current_player == False:
-		#body > main > div > div > div > div:nth-child(2) > div.stats-player-summary.team-color.TOR > div.stats-teamplayer-summary-container.with-padding > div.stats-player-summary__container > div > div.summary-player__logo > img
 		try:
 			player_link = f'https://www.nba.com/stats/player/{player_id}/career'
 			header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
@@ -53,8 +54,6 @@ def scrape_image(player_id):
 			current_player = False
 		except: 
 		 	current_player = True
-
-	print("current") if current_player else print("historic")
 
 	return str(image_address)
 
@@ -102,27 +101,24 @@ async def on_message(message):
 
 	#find info on custom players
 	if message.content.startswith('=customplayer'):
-		#all just to have the custom player name
 		split_custom_player_name = message.content.split()[1:]
 		custom_player_name, j = '', 0
 		for i in split_custom_player_name:
-			custom_player_name += str(split_custom_player_name)[j] + ' '
-		custom_player_name -= custom_player_name[-1]
-		print(custom_player_name)
-	
-
-
+			custom_player_name += str(split_custom_player_name[j]) + ' '
+			j += 1
+		custom_player_name.replace(custom_player_name[-1], '')
 	#add stats to custom players by playing custom game
 	if message.content.startswith('=playcustom'):
 		pass
 
 	#If the user uses the player command with the '=' prefix
 	if message.content.upper().startswith('=PLAYER'):
-
+		
 		full_name = message.content
 
 		full_name=full_name.split(" ")
 
+		#formatting player names
 		if len(full_name) < 3:
 			querystring = {"first_name":full_name[1]}
 		
@@ -130,22 +126,29 @@ async def on_message(message):
 			full_name=(f"{full_name[1]} {full_name[2]}")
 			querystring = {"full_name":full_name}
 			
-		
 		url = "https://nba-stats4.p.rapidapi.com/players/"
 
 		headers = {
-			'x-rapidapi-key': str(Rapid_API_Key),
+			'x-rapidapi-key': str(RAPID_API_KEY),
 			'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
 			}
 		response = requests.request("GET", url, headers=headers, params=querystring)
 
-		print(response.text)
+		if len(full_name) <3:
+			name_query=response.text
+			name_query=name_query.replace(":",",")
+			name_query=name_query.split(",")
+
+			name_list=discord.Embed(title=f"Full Name List",description="Please choose one of these players from the list", color=0xA4D6D1)
+
+			for i in range(len(name_query)):
+				full_name_position=name_query.index(' "full_name"')
+				name_query.pop(full_name_position)
+				await message.channel.send(name_query[full_name_position][2:-1])
 
 		#takes player id from response text
 		player_id=(str((response.text.split(",")[0]))[8:])
-		#################################
 		time.sleep(1)
-		################################
 
 		if player_id == "":
 			await message.channel.send(f"There is not enough information available on {full_name}")
@@ -154,7 +157,7 @@ async def on_message(message):
 			url = f"https://nba-stats4.p.rapidapi.com/per_game_career_regular_season/{player_id}"
 
 			headers = {
-			'x-rapidapi-key': str(Rapid_API_Key),
+			'x-rapidapi-key': str(RAPID_API_KEY),
 			'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
 			}
 
@@ -172,7 +175,7 @@ async def on_message(message):
 			try:
 				player_stats.append(stat_block[3][7:])	#Games Played
 				player_embed.add_field(name="Games Played",value=f"{player_stats[0]}",inline=False)
-			except:print("Games Played no work")
+			except:pass
 
 			try:
 				player_stats.append(stat_block[22][17:-2])	#Point Avg
@@ -203,10 +206,8 @@ async def on_message(message):
 
 			await message.channel.send(embed=player_embed)
 
-
-
 #pings website server over and over through the method ran in keep_alive.py with Flask
 keep_alive()
 
 #Runs Discord Bot
-client.run(Discord_Token)
+client.run(DISCORD_TOKEN)

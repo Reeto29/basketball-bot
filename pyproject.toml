@@ -11,6 +11,7 @@ pytz = "^2021.1"
 Unidecode = "^1.2.0"
 Flask = "^2.0.1"
 bs4 = "^0.0.1"
+replit = "^3.1.0"
 
 [tool.poetry.dev-dependencies]
 
