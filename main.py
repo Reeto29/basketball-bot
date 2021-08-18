@@ -21,6 +21,7 @@ client = discord.Client()
 
 def scrape_image(player_id):
 	try:
+		#scraping for current nba player
 		player_link = f'https://www.nba.com/player/{player_id}'
 		header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
 
@@ -29,31 +30,19 @@ def scrape_image(player_id):
 
 		current_soup = BeautifulSoup(response.text, "html5lib")
 
-		img_addy = current_soup.select(r'div > div.block.w-1\/2.md\:w-1\/3 > img')[0]['src']
-
-		image_address = img_addy
-
-		current_player = True
+		image_address = current_soup.select(r'div > div.block.w-1\/2.md\:w-1\/3 > img')[0]['src']
 	except: 
-		current_player = False
+		#must be historic, so tries this exception
+		player_link = f'https://www.nba.com/stats/player/{player_id}/career'
+		header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
 
-	if current_player == False:
-		try:
-			player_link = f'https://www.nba.com/stats/player/{player_id}/career'
-			header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
+		response = requests.get(player_link, headers=header)
 
-			response = requests.get(player_link, headers=header)
+		if response.status_code != 200: print("Failed to get HTML:", response.status_code, response.reason); exit()
+		
+		historic_soup = BeautifulSoup(response.text, "html5lib")
 
-			if response.status_code != 200: print("Failed to get HTML:", response.status_code, response.reason); exit()
-			
-			historic_soup = BeautifulSoup(response.text, "html5lib")
-
-			history_man = historic_soup.select(r'div.stats-player-summary__container > div > div.summary-player__logo > img')
-			
-			print(history_man, "printed")
-			current_player = False
-		except: 
-		 	current_player = True
+		image_address = historic_soup.select(r'div.stats-player-summary__container > div > div.summary-player__logo > img')
 
 	return str(image_address)
 
@@ -65,10 +54,6 @@ async def on_ready():
 #Event triggers each time a message is received
 @client.event
 async def on_message(message):
-	@client.event
-	async def on_member_update(before, after):
-		if str(before.status) == "online" and str(after.status) == "offline": await message.channel.send(f'Goodbye, {after.user}')
-
 	#removes accents since API does not accept them
 	message.content=unidecode.unidecode(message.content)
 
@@ -205,6 +190,12 @@ async def on_message(message):
 			player_embed.set_footer(text="Basketball Bot")
 
 			await message.channel.send(embed=player_embed)
+
+@client.event
+async def on_member_update(before, after):
+	pass
+	#if str(before.status) == "online" and str(after.status) == "offline": await message.channel.send(f'Goodbye, {after.user}')
+	#TODO need to get message.channel value here for this feature
 
 #pings website server over and over through the method ran in keep_alive.py with Flask
 keep_alive()
