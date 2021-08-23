@@ -31,6 +31,7 @@ def scrape_image(player_id):
 		current_soup = BeautifulSoup(response.text, "html5lib")
 
 		image_address = current_soup.select(r'div > div.block.w-1\/2.md\:w-1\/3 > img')[0]['src']
+		return str(image_address)
 	except: 
 		#must be historic, so tries this exception
 		player_link = f'https://www.nba.com/stats/player/{player_id}/career'
@@ -44,7 +45,9 @@ def scrape_image(player_id):
 
 		image_address = historic_soup.select(r'div.stats-player-summary__container > div > div.summary-player__logo > img')
 
-	return str(image_address)
+		return ""
+		#currently doesn't work for historic players
+
 
 #When bot is ready, it will say it is logged in
 @client.event
@@ -54,6 +57,8 @@ async def on_ready():
 #Event triggers each time a message is received
 @client.event
 async def on_message(message):
+	global message_channel
+	message_channel = message.channel
 	#removes accents since API does not accept them
 	message.content=unidecode.unidecode(message.content)
 
@@ -129,7 +134,10 @@ async def on_message(message):
 			for i in range(len(name_query)):
 				full_name_position=name_query.index(' "full_name"')
 				name_query.pop(full_name_position)
-				await message.channel.send(name_query[full_name_position][2:-1])
+
+				list_names=name_query[full_name_position][2:-1]
+				
+				await message.channel.send(list_names)
 
 		#takes player id from response text
 		player_id=(str((response.text.split(",")[0]))[8:])
@@ -193,8 +201,11 @@ async def on_message(message):
 
 @client.event
 async def on_member_update(before, after):
-	pass
-	#if str(before.status) == "online" and str(after.status) == "offline": await message.channel.send(f'Goodbye, {after.user}')
+	print(str(before.status), str(after.status))
+	if str(before.status) == "online" and str(after.status) == "offline": 
+		print("someone went offline")
+		try: await message_channel.send(f'Goodbye, {after.user}')
+		except: print('failed to send goodbye message')
 	#TODO need to get message.channel value here for this feature
 
 #pings website server over and over through the method ran in keep_alive.py with Flask
