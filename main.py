@@ -110,10 +110,13 @@ async def on_message(message):
 
 	#If the user uses the player command with the '=' prefix
 	if message.content.upper().startswith('=PLAYER'):
-		
-		full_name = message.content
+		name_message = message.content
 
-		full_name=full_name.split(" ")
+		name_message_words=name_message.split(" ")
+
+		full_name = [name_message_words[0]]
+		for word in name_message_words[1:]:
+			full_name.append(word[0].upper() + word[1:])
 
 		#formatting player names
 		if len(full_name) < 3:
@@ -156,7 +159,7 @@ async def on_message(message):
 		time.sleep(1)
 
 		if player_id == "":
-			await message.channel.send(f"There is not enough information available on {full_name}")
+			await message.channel.send(f"There is not enough information available on {full_name}. Bear in mind the name is case-sensitive. If you're unsure about a part of a player's name you can search for possible matches by entering either their first or last name only.")
 
 		else:
 			url = f"https://nba-stats4.p.rapidapi.com/per_game_career_regular_season/{player_id}"
@@ -224,4 +227,4 @@ async def on_member_update(before, after):
 keep_alive()
 
 #Runs Discord Bot
-client.run(DISCORD_TOKEN)
+client.run(DISCORD_TOKEN)	
