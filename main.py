@@ -19,7 +19,7 @@ RAPID_API_KEY = os.environ['RAPID_API_KEY']
 
 client = discord.Client()
 
-def scrape_image(player_id):
+def scrape_image(player_id, full_name):
 	try:
 		#scraping for current nba player
 		player_link = f'https://www.nba.com/player/{player_id}'
@@ -34,7 +34,16 @@ def scrape_image(player_id):
 		return str(image_address)
 	except: 
 		#must be historic, so tries this exception
-		player_link = f'https://www.nba.com/stats/player/{player_id}/career'
+
+		#(first 5 letters of last name) + (first 2 letters of first name)
+		last_name, first_name = full_name.split()[-1].lower(), full_name.split()[0].lower()
+		
+		name_for_link = last_name[:5] if len(last_name) > 4 else last_name[:len(last_name)] 
+
+		name_for_link += first_name[:2] if len(first_name) > 1 else first_name[:len(first_name)]
+
+		player_link = f'https://www.basketball-reference.com/players/{last_name[0]}/{name_for_link}01.html'
+
 		header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
 
 		response = requests.get(player_link, headers=header)
@@ -43,11 +52,9 @@ def scrape_image(player_id):
 		
 		historic_soup = BeautifulSoup(response.text, "html5lib")
 
-		image_address = historic_soup.select(r'div.stats-player-summary__container > div > div.summary-player__logo > img')
+		image_address = historic_soup.select(r'#meta > div.media-item > img')[0]['src']
 
-		return ""
-		#currently doesn't work for historic players
-
+		return str(image_address)
 
 #When bot is ready, it will say it is logged in
 @client.event
@@ -124,20 +131,25 @@ async def on_message(message):
 			}
 		response = requests.request("GET", url, headers=headers, params=querystring)
 
-		if len(full_name) <3:
+		if len(full_name) < 3:
 			name_query=response.text
 			name_query=name_query.replace(":",",")
 			name_query=name_query.split(",")
 
-			name_list=discord.Embed(title=f"Full Name List",description="Please choose one of these players from the list", color=0xA4D6D1)
+			list_names_embed=discord.Embed(title=f"Full Name List",description="Please choose one of these players from the list", color=0xA4D6D1)
 
-			for i in range(len(name_query)):
-				full_name_position=name_query.index(' "full_name"')
-				name_query.pop(full_name_position)
+			list_names=[]
+			try:
+				for i in range(len(name_query)):
+					full_name_position=name_query.index(' "full_name"')
+					name_query.pop(full_name_position)
 
-				list_names=name_query[full_name_position][2:-1]
-				
-				await message.channel.send(list_names)
+					list_names.append(name_query[full_name_position][2:-1])
+			except:
+				pass
+			for i in range(len(list_names)):
+				list_names_embed.add_field(name=f"Player {i+1}",value=f"{list_names[i]}",inline=False)
+			await message.channel.send(embed=list_names_embed)
 
 		#takes player id from response text
 		player_id=(str((response.text.split(",")[0]))[8:])
@@ -162,7 +174,7 @@ async def on_message(message):
 
 			player_embed=discord.Embed(title=f"{full_name} Career Stats",description="Overview on player statistics", color=0xA4D6D1)
 
-			try:player_embed.set_thumbnail(url=scrape_image(player_id))
+			try:player_embed.set_thumbnail(url=scrape_image(player_id, full_name))
 			except:print("Thumbnail image scrape not working")
 
 			try:
