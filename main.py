@@ -6,6 +6,8 @@ import unidecode
 import discord
 from keep_alive import keep_alive
 
+import asyncio
+
 #scraping
 import requests
 from bs4 import BeautifulSoup
@@ -161,6 +163,7 @@ async def on_message(message):
 			else:
 				#takes player id from response text
 				player_id=(str((response.text.split(",")[0]))[8:])
+				print(player_id)
 				time.sleep(1)
 
 				if player_id == "":
