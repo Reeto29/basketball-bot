@@ -21,6 +21,7 @@ RAPID_API_KEY = os.environ['RAPID_API_KEY']
 
 client = discord.Client()
 
+
 def scrape_image(player_id, full_name):
 	try:
 		#scraping for current nba player
@@ -90,7 +91,7 @@ async def on_message(message):
 
 			help_embed.add_field(name="=hello",value="Greet the bot",inline=False)
 
-			help_embed.add_field(name="=player",value="Retreive player statistics from the bot by using the '=player' followed by the full name of the player with proper capitalization. ex: =player DeMar DeRozan",inline=False)
+			help_embed.add_field(name="=player",value="Retreive player statistics from the bot by using the '=player' followed by the full name of the player with proper capitalization, ex: =player deMar deRozan for in-word capital letters.",inline=False)
 
 			help_embed.add_field(name="=gn or =good night followed by anything else such as gn! or gn <3",value="Have the bot say goodbye to you in canadian slang",inline=False)
 
@@ -114,6 +115,7 @@ async def on_message(message):
 
 	#If the user uses the player command with the '=' prefix
 	if message.content.upper().startswith('=PLAYER'):
+
 		async with message.channel.typing():
 			name_message = message.content
 
@@ -130,7 +132,8 @@ async def on_message(message):
 			if len(full_name) == 3:
 				full_name=(f"{full_name[1]} {full_name[2]}")
 				querystring = {"full_name":full_name}
-			
+
+			time.sleep (1)
 				
 			url = "https://nba-stats4.p.rapidapi.com/players/"
 
@@ -141,11 +144,34 @@ async def on_message(message):
 			response = requests.request("GET", url, headers=headers, params=querystring)
 
 			if len(full_name) < 3:
-				name_query=response.text
-				name_query=name_query.replace(":",",")
-				name_query=name_query.split(",")
+				cap_reached=False
+
+				first_name_query=response.text
+				first_name_query=first_name_query.replace(":",",")
+				first_name_query=first_name_query.split(",")
+
+				time.sleep(1)
+
+				querystring = {"last_name":full_name[1]}
+
+				url = "https://nba-stats4.p.rapidapi.com/players/"
+
+				headers = {
+					'x-rapidapi-key': str(RAPID_API_KEY),
+					'x-rapidapi-host': "nba-stats4.p.rapidapi.com"
+					}
+				response = requests.request("GET", url, headers=headers, params=querystring)
+
+				last_name_query=response.text
+				last_name_query=last_name_query.replace(":",",")
+				last_name_query=last_name_query.split(",")
+
+				name_query=first_name_query + last_name_query
 
 				list_names_embed=discord.Embed(title=f"Full Name List",description="Please choose one of these players from the list", color=0xA4D6D1)
+
+				list_names_embed_2=discord.Embed(title=f"Full Name List 2",description="Please choose one of these players from the list", color=0xA4D6D1)
+
 
 				list_names=[]
 				try:
@@ -158,7 +184,14 @@ async def on_message(message):
 					pass
 				for i in range(len(list_names)):
 					list_names_embed.add_field(name=f"Player {i+1}",value=f"{list_names[i]}",inline=True)
+					if i > 24:
+						cap_reached=True
+						list_names_embed_2.add_field(name=f"Player {i+1}",value=f"{list_names[i]}",inline=True)
+
 				await message.channel.send(embed=list_names_embed)
+
+				if cap_reached==True:
+					await message.channel.send(embed=list_names_embed_2)
 				
 			else:
 				#takes player id from response text
@@ -167,7 +200,7 @@ async def on_message(message):
 				time.sleep(1)
 
 				if player_id == "":
-					await message.channel.send(f"There is not enough information available on {full_name}. Bear in mind the name is case-sensitive. If you're unsure about a part of a player's name you can search for possible matches by entering either their first or last name only.")
+					await message.channel.send(f"There is not enough information available on {full_name}.")
 
 				else:
 					url = f"https://nba-stats4.p.rapidapi.com/per_game_career_regular_season/{player_id}"
