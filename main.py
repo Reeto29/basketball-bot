@@ -268,16 +268,6 @@ async def on_message(message):
 		async with message.channel.typing():
 			await message.channel.send('one time crodie')
 
-@client.event
-async def on_member_update(before, after):
-	print(str(before.status), str(after.status))
-	if str(before.status) == "online" and str(after.status) == "offline": 
-		print("someone went offline")
-		try: await message_channel.send(f'Goodbye, {after.user}')
-		except: print('failed to send goodbye message')
-	#TODO need to get message.channel value here for this feature
-
-
 #pings website server over and over through the method ran in keep_alive.py with Flask
 keep_alive()
 
