@@ -6,8 +6,6 @@ import unidecode
 import discord
 from keep_alive import keep_alive
 
-import asyncio
-
 #scraping
 import requests
 from bs4 import BeautifulSoup
