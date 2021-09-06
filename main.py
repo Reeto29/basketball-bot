@@ -7,13 +7,11 @@ from random import randint
 import discord
 from discord.ext import commands
 from keep_alive import keep_alive
+from discord_buttons_plugin import *
 
 #scraping
 import requests
 from bs4 import BeautifulSoup
-
-#database
-from replit import db
 
 #brings in the hidden token
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
@@ -23,6 +21,49 @@ RAPID_API_KEY = os.environ['RAPID_API_KEY']
 client = commands.Bot(command_prefix=('= ', '='), case_insensitive = True )
 
 client.remove_command("help")
+
+buttons=ButtonsClient(client)
+######################
+
+example_embed=discord.Embed(title="Example Embed Page 1",description="Example Embed", color=0xCF352)
+
+example_embed.add_field(name="Test",value="test to see if the buttons go on embeds this wat",inline=False)
+
+example_embed_2=discord.Embed(title="Example Embed Page 2",description="Example Embed", color=0xCF352)
+
+example_embed_2.add_field(name="Test",value="test to see if the buttons go on embeds this wat",inline=False)
+
+@client.command()
+async def create(ctx):
+	await buttons.send(
+		content = "This is an example message!", 
+		embed=example_embed,
+		channel = ctx.channel.id,
+		components = [
+			ActionRow([
+				Button(
+					label="<", 
+					style=ButtonType().Primary, 
+					custom_id="button_one"
+				),Button(
+					label=">",
+					style=ButtonType().Primary,
+					custom_id="button_two"
+				)
+			])
+		]
+	)
+
+@buttons.click
+async def button_one(ctx):
+	await ctx.reply(embed=example_embed)
+
+@buttons.click
+async def button_two(ctx):
+	await ctx.reply(embed=example_embed_2)
+	
+
+##############
 
 def scrape_image(player_id, full_name):
 	try:
@@ -84,6 +125,7 @@ async def help(ctx):
 	help_embed.add_field(name="=ping",value="Check the latency of the bot's response to your requests",inline=False)
 
 	await ctx.send(embed=help_embed)
+
 
 @client.command()
 async def player(ctx):
