@@ -201,7 +201,10 @@ async def player(ctx):
 					cap_reached=True
 					list_names_embed_2.add_field(name=f"Player {i+1}",value=f"{list_names[i]}",inline=True)
 
-			await ctx.send(embed=list_names_embed)
+			if len(list_names) != 0:
+				await ctx.send(embed=list_names_embed)
+			else:
+				await ctx.send(f"There is not enough information available on {full_name[-1]}.")
 
 			if cap_reached==True:
 				await ctx.send(embed=list_names_embed_2)
